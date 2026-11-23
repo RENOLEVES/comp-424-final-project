@@ -13,7 +13,7 @@ import time
 
 
 WIN_SCORE = 1_000_000
-TIME_MARGIN = 0.25
+TIME_MARGIN = 0.40
 
 
 class _SearchTimeout(Exception):
@@ -37,10 +37,16 @@ def evaluate_position(board, reserves, player, opponent):
     for line in LINES[WIN_LENGTH]:
         mine = 0
         theirs = 0
+        blocked = False
         for row, col in line:
             owner = int(owners[row, col])
+            if owner == OBSTACLE:
+                blocked = True
+                break
             mine += owner == player
             theirs += owner == opponent
+        if blocked:
+            continue
         if theirs == 0:
             score += line_weights[mine]
         if mine == 0:
