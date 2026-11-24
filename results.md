@@ -16,7 +16,7 @@ Otherwise "no significant difference": keep only if not slower and logically sou
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | v0_baseline | none (copy of old_agent.py) | - | agents/old_agent.py | A (132214, 132219) | 6 | 8 | 6 | 50.0% | 1.60s / 1.60s | 0 / 0 | NOISE CHECK OK |
 | v1a_cell1 | 1. cell value | CELL_WEIGHT=1 | agents/old_agent.py | A (132214, 132219) | 1 | 11 | 8 | 11.1% | 1.60s / 1.60s | 0 / 0 | DROP |
-| v1b_cell05 | 1. cell value | CELL_WEIGHT=0.5 | agents/old_agent.py | A (132214, 132219) + B (900000; 900005 pending) | 4 | 16 | 10 | 28.6%* | 1.60s / 1.60s | 0 / 0 | DROP |
+| v1b_cell05 | 1. cell value | CELL_WEIGHT=0.5 | agents/old_agent.py | A (132214, 132219) + B (900000, 900005) | 7 | 22 | 11 | 38.9% | 1.60s / 1.60s | 0 / 0 | not kept (no significant difference, trends negative) |
 
 (rows appended as each test completes)
 
@@ -41,19 +41,19 @@ step times identical, so this is a heuristic-quality loss, not a search/engineer
 
 **v1b_cell05** (rule 1, CELL_WEIGHT=0.5): same rule as v1a, weight 0.5. Symmetry-checked and
 validated (PASS) the same way. Round A alone was inconclusive (4W-12D-4L, exactly 50% of 8 decisive
-games — neither KEEP nor DROP territory). Round B's first seed (900000) swung hard the other way
-(0W-4D-6L), bringing the running total to 4W-16D-10L, 28.6% of 14 decisive games — already at the
-<=30% DROP line with well over the required 8 decisive games, so moving on to rule 2 per the user's
-live instruction without waiting for the second Round B seed (900005), which was already running in
-the background and will be appended as a footnote below once it finishes; it cannot change the
-DROP verdict (even 10 more wins out of 10 only pulls the total to 14/24 = 58%, and even a clean
-sweep the other way only deepens the drop). **Verdict: DROP.** Even at half the weight, rewarding
-raw line-count-per-cell control still seems to pull the agent away from the baseline's
-race-to-complete-a-line logic often enough to lose material/tempo. Rule 1 (cell value) is dropped
-entirely; `agents/old_agent.py` remains the current best going into rule 2.
-
-*v1b_cell05 footnote: Round B seed 900005 result pending at verdict time; see table update below if
-it completes before the session ends.*
+games). Round B's first seed (900000) swung hard the other way (0W-4D-6L); at that point, with the
+second Round B seed (900005) still running in the background, the running total stood at
+4W-16D-10L (28.6% of 14 decisive games), which already cleared the <=30% DROP bar, so testing moved
+on to rule 2 per the user's live instruction rather than waiting. Seed 900005 then finished
+3W-6D-1L in v1b_cell05's favor, pulling the **final, complete** total to 7W-22D-11L across all 20
+Round A + Round B games: 38.9% of 18 decisive games. That lands in the "no significant difference"
+band (neither >=75% KEEP nor <=30% DROP), not a clean DROP as first estimated from the partial data
+— correcting that here. Per the decision rule, an inconclusive result is kept only if it is not
+slower and the rule is logically sound; 38.9% is still net-negative (losing more than it wins), so
+the judgment call is **not kept**, matching the direction of the original call even though the
+precise bucket (ambiguous vs. clear-drop) was off with incomplete data. Combined with v1a's clear
+drop at weight 1, rule 1 (cell value) is dropped entirely; `agents/old_agent.py` remains the current
+best going into rule 2.
 
 **Timing note:** wall-clock gaps between my turns in this session have been multi-hour (the
 background match itself only takes roughly 10-20 minutes of CPU time), so the "7 hours from start"
