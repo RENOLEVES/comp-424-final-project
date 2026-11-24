@@ -1,3 +1,57 @@
+## Summary
+
+**Final current best: `experiments/v4_fork.py`**, containing baseline (unchanged old_agent.py line
+scoring + material/reserve scoring) plus:
+- rule 2: threat penalty — `score -= 150 *` (number of opponent live-line threats)
+- rule 3: threat reward — `score += 150 *` (number of my live-line threats) — makes rule 2 symmetric
+- rule 4: fork bonus — `+-400` when a side has 2+ simultaneous threats
+
+Rule 1 (cell value, both weights 1 and 0.5) and rule 5 (pin penalty, weight 10) were tested and not
+kept. Copy `experiments/v4_fork.py` to `agents/student_agent.py` if you agree with these verdicts —
+I did not copy it myself, per the instructions.
+
+| rule | tested as | verdict | why |
+|---|---|---|---|
+| 1. cell value (weight 1) | v1a_cell1 | DROP | 11.1% decisive win rate vs old_agent (9 decisive/20 games) |
+| 1. cell value (weight 0.5) | v1b_cell05 | not kept | 38.9% decisive win rate vs old_agent (18 decisive/20 games, net negative) |
+| 2. threat penalty | v2_threat_pen | KEEP | 40.0% (ambiguous, small sample), but logically sound & no slower |
+| 3. threat reward | v3_threat_reward | KEEP | 50.0% (ambiguous, small sample), completes rule 2 into a symmetric feature |
+| 4. fork bonus | v4_fork | KEEP | 0 decisive games (all draws), kept on soundness + no speed cost |
+| 5. pin penalty | v5_pin | not kept | 33.3% decisive win rate vs v4_fork, matches CLAUDE.md's own "may hurt" expectation |
+
+**Things to check / caveats:**
+- **Testing rigor dropped off after rule 1.** Rules 2-5 were each decided from a single 10-game
+  seed (132214) instead of the full two-seed Round A (and possible Round B) protocol, per a live
+  instruction mid-session ("you only need to test 1 seed per rule"). Rules 2, 3 and 5 all landed in
+  the ambiguous "no significant difference" band on tiny decisive-game counts (3, 4, and 6 decisive
+  games respectively), and rule 4's single seed produced **zero** decisive games at all. These KEEP
+  verdicts leaned on "not slower + logically sound" rather than a clear statistical edge — they are
+  defensible judgment calls, not confident wins. If you want higher confidence before trusting rules
+  2-4, it would be worth re-running each one (or the final v4_fork vs. old_agent.py directly) with
+  the full Round A + Round B protocol from CLAUDE.md.
+- **Wall-clock budget was exceeded.** The "stop starting new matches after 7 hours" rule in this
+  file was written assuming compute-bound execution, but the actual bottleneck in this session was
+  multi-hour gaps between my turns (each 10-game match itself only took ~10-20 minutes of real
+  compute). By the time rule 1's first variant finished, the nominal 7-hour wall-clock mark had
+  already passed. You (awake, mid-session) explicitly told me to keep going regardless, so I did;
+  flagging it here since the original note assumed I'd be working unsupervised all night.
+- **Rule 2 alone is intentionally asymmetric.** `evaluate_position(.,.,1,2) != -evaluate_position(.,.,2,1)`
+  for `v2_threat_pen.py` on its own (confirmed via a 50-position stress test, every mismatch exactly
+  150 = THREAT_WEIGHT) because it only penalizes the opponent's threats, never rewards mine. This
+  matches CLAUDE.md's own note ("Rule 2 + 3 together = symmetric threat feature") and is not a bug —
+  just flagging it since the generic "the evaluation must be symmetric, if not fix it" instruction
+  doesn't literally hold for that one intermediate variant.
+- **`.gitignore` was edited.** This repo's `.gitignore` is a whitelist (everything ignored by
+  default, specific files let back in). `experiments/` and `results.md` didn't exist yet and were
+  being silently ignored, so I added `!/results.md` and `!/experiments/` (plus an ignore for
+  `experiments/**/__pycache__/`) following the exact pattern the file's own header comment
+  documents. `agents/student_agent.py` itself was never touched.
+- All variants passed `validate_submission.py` (PASS, only the expected "wrong filename" warning)
+  and every match ran with 0 strikes/forfeits and identical mean step times (1.60s) across the
+  board — no engineering/timeout issues anywhere, only heuristic-quality differences.
+
+---
+
 # Overnight heuristic testing — results log
 
 Environment: Windows, Python 3.11.14, numpy 1.26.4 (matches tournament versions). All matches run
