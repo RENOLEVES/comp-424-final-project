@@ -19,6 +19,7 @@ Otherwise "no significant difference": keep only if not slower and logically sou
 | v1b_cell05 | 1. cell value | CELL_WEIGHT=0.5 | agents/old_agent.py | A (132214, 132219) + B (900000, 900005) | 7 | 22 | 11 | 38.9% | 1.60s / 1.60s | 0 / 0 | not kept (no significant difference, trends negative) |
 | v2_threat_pen | 2. threat penalty (opponent only) | THREAT_WEIGHT=150 | agents/old_agent.py | A (132214, 132219) | 2 | 15 | 3 | 40.0% | 1.60s / 1.60s | 0 / 0 | KEEP (no significant difference; logically sound, not slower) |
 | v3_threat_reward | 3. threat reward (symmetric with rule 2) | THREAT_WEIGHT=150 | experiments/v2_threat_pen.py | 132214 only | 2 | 6 | 2 | 50.0% | 1.60s / 1.60s | 0 / 0 | KEEP (no significant difference; logically sound, not slower) |
+| v4_fork | 4. fork bonus | FORK_WEIGHT=400 | experiments/v3_threat_reward.py | 132214 only | 0 | 10 | 0 | n/a (0 decisive) | 1.60s / 1.60s | 0 / 0 | KEEP (no significant difference; logically sound, not slower) |
 
 (rows appended as each test completes)
 
@@ -96,6 +97,19 @@ since this is rule 2 + 3 together, which CLAUDE.md calls out as the symmetric pa
 tiny sample. Mean step time identical (1.60s) and the rule is logically sound (same justification
 as rule 2, now applied symmetrically), so **verdict: KEEP.** `experiments/v3_threat_reward.py`
 becomes the current best going into rule 4 (a threat rule was kept, so rule 4 is tested).
+
+**v4_fork** (rule 4, fork bonus, on top of v3_threat_reward): reuses the `my_threats` /
+`opponent_threats` counts already computed for rules 2+3 and adds `FORK_WEIGHT=400` for my side
+when `my_threats >= 2`, subtracts it when `opponent_threats >= 2`. Stress-tested symmetric over 50
+random positions (0/50 mismatches) and validated (PASS). Single-seed test (132214) against the
+current best, `experiments/v3_threat_reward.py`: all 10 games were draws (0 decisive games) — the
+most extreme case of "no significant difference" possible; both agents are apparently strong/even
+enough at this point that this seed's configurations never resolve to a win either way. Step time
+unchanged (1.60s) and the fork concept (an unstoppable double threat) is a standard, logically
+sound tactical idea, so **verdict: KEEP.** `experiments/v4_fork.py` becomes the current best going
+into rule 5. (Given the 0-decisive result here, this is a weaker basis for "KEEP" than the earlier
+rules' — flagging that if the user wants a second seed for confidence, it's worth re-checking, but
+proceeding per the "1 seed per rule" instruction.)
 
 **Timing note:** wall-clock gaps between my turns in this session have been multi-hour (the
 background match itself only takes roughly 10-20 minutes of CPU time), so the "7 hours from start"
