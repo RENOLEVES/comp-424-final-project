@@ -13,26 +13,21 @@ import time
 
 
 WIN_SCORE = 1_000_000
-TIME_MARGIN = 0.40
+TIME_MARGIN = 0.4
 
 
 class _SearchTimeout(Exception):
     """Raised internally when the safe search deadline has been reached."""
 
 
-def evaluate_position(board, reserves, player, opponent):
-    """Return a position score from ``player``'s point of view.
+CELL_WEIGHT = 0.5
 
-    This is the replaceable heuristic interface for the Evaluation & Strategy
-    teammate. Its signature and point of view should remain unchanged; the
-    search treats larger values as better for ``player``. Terminal wins and
-    losses are handled by the search, so this function evaluates only ongoing
-    positions.
-    """
+def evaluate_position(board, reserves, player, opponent):
+    """Step 2: step 1 + reward controlling cells that lie on more live lines."""
     owners, sizes = top_view(board)
     score = 0
+    cell_value = np.zeros((BOARD_SIZE, BOARD_SIZE))
 
-    # Reward uncontested lines increasingly as they approach completion.
     line_weights = (0, 2, 12, 80, 500)
     for line in LINES[WIN_LENGTH]:
         mine = 0
@@ -47,12 +42,17 @@ def evaluate_position(board, reserves, player, opponent):
             theirs += owner == opponent
         if blocked:
             continue
+        for row, col in line:                          # NEW: count live lines per cell
+            cell_value[row, col] += 1
         if theirs == 0:
             score += line_weights[mine]
         if mine == 0:
             score -= line_weights[theirs]
 
-    # Prefer visible control by larger pieces and retain useful reserve pieces.
+    # NEW: control of valuable cells (my top pieces minus opponent's)
+    score += CELL_WEIGHT * float(cell_value[owners == player].sum()
+                                 - cell_value[owners == opponent].sum())
+
     for size in (SMALL, MEDIUM, LARGE):
         weight = size + 1
         score += weight * int(np.count_nonzero((owners == player) & (sizes == size)))
