@@ -1,0 +1,6 @@
+Rules: allow_moves=True  win_length=4  max_plies=100
+Pairs: 5 (10 games)   configs: seeds 132214..132218
+experiments/v5_pin.py  : W   2  D   4  L   4  ->  40.0 %   as P1: 1/5   as P2: 1/5
+experiments/v4_fork.py : W   4  D   4  L   2  ->  60.0 %   as P1: 3/5   as P2: 1/5
+step time  experiments/v5_pin.py : max 1.60 s  mean 1.60 s  soft-timeouts 0  illegal 0  exceptions 0  forfeits 0
+step time  experiments/v4_fork.py: max 1.60 s  mean 1.60 s  soft-timeouts 0  illegal 0  exceptions 0  forfeits 0
