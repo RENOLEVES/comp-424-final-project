@@ -18,6 +18,7 @@ Otherwise "no significant difference": keep only if not slower and logically sou
 | v1a_cell1 | 1. cell value | CELL_WEIGHT=1 | agents/old_agent.py | A (132214, 132219) | 1 | 11 | 8 | 11.1% | 1.60s / 1.60s | 0 / 0 | DROP |
 | v1b_cell05 | 1. cell value | CELL_WEIGHT=0.5 | agents/old_agent.py | A (132214, 132219) + B (900000, 900005) | 7 | 22 | 11 | 38.9% | 1.60s / 1.60s | 0 / 0 | not kept (no significant difference, trends negative) |
 | v2_threat_pen | 2. threat penalty (opponent only) | THREAT_WEIGHT=150 | agents/old_agent.py | A (132214, 132219) | 2 | 15 | 3 | 40.0% | 1.60s / 1.60s | 0 / 0 | KEEP (no significant difference; logically sound, not slower) |
+| v3_threat_reward | 3. threat reward (symmetric with rule 2) | THREAT_WEIGHT=150 | experiments/v2_threat_pen.py | 132214 only | 2 | 6 | 2 | 50.0% | 1.60s / 1.60s | 0 / 0 | KEEP (no significant difference; logically sound, not slower) |
 
 (rows appended as each test completes)
 
@@ -80,6 +81,21 @@ identical to `agents/old_agent.py` (1.60s) and the rule is logically sound (neve
 opponent's one-move win is an unambiguous improvement in principle), so per the decision rule's
 "otherwise" branch, **verdict: KEEP.** `experiments/v2_threat_pen.py` becomes the current best
 going into rule 3.
+
+**v3_threat_reward** (rule 3, threat reward, on top of v2_threat_pen): adds the mirror-image reward
+for my own threats, `score += THREAT_WEIGHT * my_threats`, using the exact same completion check as
+rule 2 but with attacker/defender swapped. Refactored the shared check into a nested
+`_count_threats(attacker, defender)` helper inside `evaluate_position` (still "only
+evaluate_position changed" — the helper is local to it) so rule 2's existing opponent-threat count
+and the new my-threat count can't drift apart through copy-paste; confirmed this refactor preserves
+rule 2's behavior via validation + the stress test below. Stress-tested symmetry over 50 random
+positions: `evaluate_position(.,.,1,2) == -evaluate_position(.,.,2,1)` held in all 50 (as expected,
+since this is rule 2 + 3 together, which CLAUDE.md calls out as the symmetric pairing). Validated
+(PASS). Tested with the new single-seed protocol (seed 132214 only) against the current best,
+`experiments/v2_threat_pen.py`: 2W-6D-2L (50.0% of 4 decisive games) — no significant difference,
+tiny sample. Mean step time identical (1.60s) and the rule is logically sound (same justification
+as rule 2, now applied symmetrically), so **verdict: KEEP.** `experiments/v3_threat_reward.py`
+becomes the current best going into rule 4 (a threat rule was kept, so rule 4 is tested).
 
 **Timing note:** wall-clock gaps between my turns in this session have been multi-hour (the
 background match itself only takes roughly 10-20 minutes of CPU time), so the "7 hours from start"
