@@ -27,3 +27,7 @@
 !/agents/student_agent.py
 
 !/game_rules.txt
+
+!/results.md
+!/experiments/
+/experiments/**/__pycache__/
