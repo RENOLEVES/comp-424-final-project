@@ -1,0 +1,6 @@
+Rules: allow_moves=True  win_length=4  max_plies=100
+Pairs: 5 (10 games)   configs: seeds 132219..132223
+experiments/v1b_cell05.py : W   2  D   5  L   3  ->  45.0 %   as P1: 0/5   as P2: 2/5
+agents/old_agent.py       : W   3  D   5  L   2  ->  55.0 %   as P1: 2/5   as P2: 1/5
+step time  experiments/v1b_cell05.py: max 1.60 s  mean 1.60 s  soft-timeouts 0  illegal 0  exceptions 0  forfeits 0
+step time  agents/old_agent.py      : max 1.60 s  mean 1.60 s  soft-timeouts 0  illegal 0  exceptions 0  forfeits 0
